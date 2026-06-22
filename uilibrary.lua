@@ -1260,7 +1260,11 @@ getgenv().Library = {
                         box.AncestryChanged:Connect(function(_, parent)
                             if not parent then list:Destroy() end
                         end)
-                        local setter = function(v) Flags[flag] = v; box.Text = displayText() end
+                        local setter = function(v)
+                            Flags[flag] = v
+                            box.Text = displayText()
+                            if o.Callback then pcall(o.Callback, Flags[flag]) end
+                        end
                         ConfigFlags[flag] = setter
                         return {
                             Set = setter,
