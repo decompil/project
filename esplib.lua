@@ -640,7 +640,7 @@ local function applyToAllItems(key, value, entriesTable)
 end
 local function getCharacterBoundingBox(chr)
     local parts = {}
-    for _, v in ipairs(chr:GetDescendants()) do
+    for _, v in ipairs(chr:GetChildren()) do
         if v:IsA("BasePart") and not v:IsDescendantOf(chr:FindFirstChild("Hurtboxes")) then
             table.insert(parts, v)
         end
