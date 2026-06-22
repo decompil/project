@@ -33,14 +33,6 @@ local defaults = {
 	distancePosition = "Bottom",
 	distanceSize     = 11,
 	maxDistance      = 2500,
-	chams            = false,
-	chamsDepth       = "AlwaysOnTop",
-	chamsFillColor   = Color3.fromRGB(255, 255, 255),
-	chamsFillAlpha   = 0.7,
-	chamsOutlineColor  = Color3.new(0, 0, 0),
-	chamsOutlineAlpha  = 0,
-	chamsTeamFill    = false,
-	chamsTeamOutline = false,
 }
 
 local item_defaults = {
@@ -59,7 +51,7 @@ for k, v in defaults do options[k] = v end
 
 local item_types = {}
 
-local ScreenGui, CacheGui, ChamsGui
+local ScreenGui, CacheGui
 local entries   = {}
 local loop      = nil
 local item_loop = nil
@@ -133,10 +125,6 @@ local function initGui()
 		Name    = "ESP_Cache",
 		Enabled = false,
 		Parent  = CoreGui,
-	})
-	ChamsGui = new("Folder", {
-		Name   = "ESP_Chams",
-		Parent = CoreGui,
 	})
 end
 
@@ -373,16 +361,6 @@ local function buildEntry(character, ownerPlayer)
 	})
 	new("UIStroke", { Parent = E.Distance, LineJoinMode = Enum.LineJoinMode.Miter })
 
-	E.Highlight = new("Highlight", {
-		Adornee             = character,
-		FillColor           = options.chamsFillColor,
-		FillTransparency    = 1,
-		OutlineColor        = options.chamsOutlineColor,
-		OutlineTransparency = 1,
-		DepthMode           = Enum.HighlightDepthMode[options.chamsDepth],
-		Parent              = options.chams and ChamsGui or CacheGui,
-	})
-
 	if options.boxes then
 		local bt = options.boxType
 		if bt == "Corner"    then E.Corners.Parent  = E.Holder
@@ -397,7 +375,7 @@ local function buildEntry(character, ownerPlayer)
 	D.destroy = function()
 		for _, c in D._conns do pcall(function() c:Disconnect() end) end
 		D._conns = {}
-		for _, key in {"Left","Right","Top","Bottom","Corners","ImageBox","Box","Text","Distance","Highlight","Holder"} do
+		for _, key in {"Left","Right","Top","Bottom","Corners","ImageBox","Box","Text","Distance","Holder"} do
 			local item = E[key]
 			if item and typeof(item) == "Instance" then pcall(function() item:Destroy() end) end
 		end
@@ -515,13 +493,6 @@ local function applyToAll(key, value)
 			E.Distance.TextXAlignment = horiz and Enum.TextXAlignment.Center
 				or Enum.TextXAlignment[value == "Right" and "Left" or "Right"]
 		end
-
-		if key == "chams"             then E.Highlight.Parent             = value and ChamsGui or CacheGui end
-		if key == "chamsFillColor"    then E.Highlight.FillColor          = value end
-		if key == "chamsFillAlpha"    then E.Highlight.FillTransparency   = 1 end
-		if key == "chamsOutlineColor" then E.Highlight.OutlineColor       = value end
-		if key == "chamsOutlineAlpha" then E.Highlight.OutlineTransparency = 1 end
-		if key == "chamsDepth"        then E.Highlight.DepthMode          = Enum.HighlightDepthMode[value] end
 	end
 end
 
@@ -692,8 +663,6 @@ local function update()
 	if options.gradientMoving then boxGradRot = (now * options.gradientSpeed) % 360 end
 	if options.fillMoving     then fillRotVal  = (now * options.fillSpeed)    % 360 end
 
-	local teamFill    = options.chams and options.chamsTeamFill
-	local teamOutline = options.chams and options.chamsTeamOutline
 
 	for _, D in entries do
 		local E   = D.Items
@@ -705,15 +674,6 @@ local function update()
 		if not chr.Parent or health <= 0 or not rt.Parent then
 			if E.Holder.Visible then E.Holder.Visible = false end
 			continue
-		end
-
-		if teamFill or teamOutline then
-			local plr = D.player
-			if plr then
-				local tc = plr.TeamColor.Color
-				if teamFill    then E.Highlight.FillColor    = tc end
-				if teamOutline then E.Highlight.OutlineColor = tc end
-			end
 		end
 
 		local rootPos = rt.Position
@@ -897,7 +857,6 @@ function esp:unload()
 	if item_loop then RunService:UnbindFromRenderStep("ItemESPLoop"); item_loop = nil end
 	pcall(function() if ScreenGui then ScreenGui:Destroy() end end)
 	pcall(function() if CacheGui  then CacheGui:Destroy()  end end)
-	pcall(function() if ChamsGui  then ChamsGui:Destroy()  end end)
 end
 
 function item_esp:add(instance, labelText, typeName)
