@@ -376,9 +376,9 @@ local function buildEntry(character, ownerPlayer)
 	E.Highlight = new("Highlight", {
 		Adornee             = character,
 		FillColor           = options.chamsFillColor,
-		FillTransparency    = options.chamsFillAlpha,
+		FillTransparency    = 1,
 		OutlineColor        = options.chamsOutlineColor,
-		OutlineTransparency = options.chamsOutlineAlpha,
+		OutlineTransparency = 1,
 		DepthMode           = Enum.HighlightDepthMode[options.chamsDepth],
 		Parent              = options.chams and ChamsGui or CacheGui,
 	})
@@ -518,9 +518,9 @@ local function applyToAll(key, value)
 
 		if key == "chams"             then E.Highlight.Parent             = value and ChamsGui or CacheGui end
 		if key == "chamsFillColor"    then E.Highlight.FillColor          = value end
-		if key == "chamsFillAlpha"    then E.Highlight.FillTransparency   = value end
+		if key == "chamsFillAlpha"    then E.Highlight.FillTransparency   = 1 end
 		if key == "chamsOutlineColor" then E.Highlight.OutlineColor       = value end
-		if key == "chamsOutlineAlpha" then E.Highlight.OutlineTransparency = value end
+		if key == "chamsOutlineAlpha" then E.Highlight.OutlineTransparency = 1 end
 		if key == "chamsDepth"        then E.Highlight.DepthMode          = Enum.HighlightDepthMode[value] end
 	end
 end
