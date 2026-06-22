@@ -638,6 +638,47 @@ local function applyToAllItems(key, value, entriesTable)
 		if key == "distanceSize"  then E.Distance.TextSize   = value end
 	end
 end
+local function getCharacterBoundingBox(chr)
+    local parts = {}
+    for _, v in ipairs(chr:GetDescendants()) do
+        if v:IsA("BasePart") and not v:IsDescendantOf(chr:FindFirstChild("Hurtboxes")) then
+            table.insert(parts, v)
+        end
+    end
+
+    if #parts == 0 then return chr:GetBoundingBox() end
+
+    local minX, minY, minZ = math.huge, math.huge, math.huge
+    local maxX, maxY, maxZ = -math.huge, -math.huge, -math.huge
+
+    for _, part in ipairs(parts) do
+        local cf = part.CFrame
+        local s = part.Size * 0.5
+        -- Check all 8 corners of the part
+        for _, corner in ipairs({
+            Vector3.new( s.X,  s.Y,  s.Z),
+            Vector3.new(-s.X,  s.Y,  s.Z),
+            Vector3.new( s.X, -s.Y,  s.Z),
+            Vector3.new(-s.X, -s.Y,  s.Z),
+            Vector3.new( s.X,  s.Y, -s.Z),
+            Vector3.new(-s.X,  s.Y, -s.Z),
+            Vector3.new( s.X, -s.Y, -s.Z),
+            Vector3.new(-s.X, -s.Y, -s.Z),
+        }) do
+            local world = cf:PointToWorldSpace(corner)
+            minX = math.min(minX, world.X)
+            minY = math.min(minY, world.Y)
+            minZ = math.min(minZ, world.Z)
+            maxX = math.max(maxX, world.X)
+            maxY = math.max(maxY, world.Y)
+            maxZ = math.max(maxZ, world.Z)
+        end
+    end
+
+    local center = Vector3.new((minX + maxX) * 0.5, (minY + maxY) * 0.5, (minZ + maxZ) * 0.5)
+    local size = Vector3.new(maxX - minX, maxY - minY, maxZ - minZ)
+    return CFrame.new(center), size
+end
 
 local function update()
 	if not options.enabled then return end
@@ -679,7 +720,7 @@ local function update()
 		local dx, dy, dz = rootPos.X - camPos.X, rootPos.Y - camPos.Y, rootPos.Z - camPos.Z
 		local dist = (dx*dx + dy*dy + dz*dz) ^ 0.5
 
-		local cf, size = chr:GetBoundingBox()
+		local cf, size = getCharacterBoundingBox(chr)
 		local hx, hy, hz = size.X * 0.5, size.Y * 0.5, size.Z * 0.5
 		local rv, uv, lv = cf.RightVector, cf.UpVector, cf.LookVector
 		local cp = cf.Position
@@ -808,21 +849,20 @@ function esp:addEntity(ent)
 end
 
 function esp:hookEntityList(entitylist)
-	local LocalPlayer = Players.LocalPlayer
-	local c = RunService:BindToRenderStep("ESP_EntitySync", 1, function()
-		local seen = {}
-		for _, ent in pairs(entitylist) do
-			local model = ent.WorldModel
-			if not model then continue end
-			if ent.Player == LocalPlayer then continue end
-			seen[model] = true
-			if not entries[model] then esp:add(model, ent.Player) end
-		end
-		for chr in pairs(entries) do
-			if not seen[chr] then esp:remove(chr) end
-		end
-	end)
-	connTable[#connTable + 1] = { Disconnect = function() RunService:UnbindFromRenderStep("ESP_EntitySync") end }
+    local LocalPlayer = Players.LocalPlayer
+    RunService:BindToRenderStep("ESP_EntitySync", 1, function()
+        local seen = {}
+        for _, ent in pairs(entitylist) do
+            if not ent.Parent then continue end
+            if ent == LocalPlayer.Character then continue end
+            seen[ent] = true
+            if not entries[ent] then esp:add(ent, nil) end
+        end
+        for chr in pairs(entries) do
+            if not seen[chr] then esp:remove(chr) end
+        end
+    end)
+    connTable[#connTable + 1] = { Disconnect = function() RunService:UnbindFromRenderStep("ESP_EntitySync") end }
 end
 
 function esp:remove(character)
