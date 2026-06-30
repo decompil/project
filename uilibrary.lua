@@ -1506,7 +1506,7 @@ getgenv().Library = {
                         end
                     
                         local sat = Library:Create("ImageLabel", {
-                            Image = "rbxassetid://4155801252",
+                            Image = "rbxassetid://117360019943671",
                             BackgroundColor3 = rgb(255, 0, 0),
                             BorderSizePixel = 0,
                             Position = dim2(0, 6, 0, 6),
